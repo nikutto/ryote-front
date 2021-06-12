@@ -28,10 +28,10 @@ const LandmarkCard: React.FC <LandmarkCardProps> = props => {
   );
 }
 
-type TransportationProps = {
+type Transportation = {
   name: String,
 }
-const Transportation: React.FC<TransportationProps> = props => {
+const TransportationCard: React.FC<Transportation> = props => {
   return (
     <div className="tra">
       ↓ {props.name}
@@ -43,18 +43,18 @@ const Transportation: React.FC<TransportationProps> = props => {
 type ItineraryOfDayProps = {
   day: number,
   landmarks: Landmark[],
-  transportations: String[],
+  transportations: Transportation[],
 }
 
 const ItineraryOfDay: React.FC <ItineraryOfDayProps> = props => {
     let landmarks = props.landmarks
     let transportations = props.transportations
-
+    
     let cards = []
     let n = landmarks.length
     for (var i = 0;i+1 < n; i++) {
       cards.push(<LandmarkCard landmark={landmarks[i]}/>)
-      cards.push(<Transportation name={transportations[i]}/>)
+      cards.push(<TransportationCard name={transportations[i].name}/>)
     }
     cards.push(<LandmarkCard landmark={landmarks[n-1]}/>)
 
@@ -81,28 +81,76 @@ const Header: React.FC = () => {
     </div>
   );
 }
-class Main extends React.Component<{}, {}> {
-  
-  getLandmarksOf(day: number): Landmark[] { 
-    return [
-      {id: 100 * day + 0, name: "Kyoto Station", detail: "Kyoto is beautiful."},
-      {id: 100 * day + 1, name: "Tokyo Station", detail: "Tokyo is wonderful."},
-      {id: 100 * day + 2, name: "Jinbocho", detail: "Jinbocho has many book stores."},
-    ];
-  }
-  getTransportationsOf(day: number): String[] {
-    return ["Shikansen", "Yamanote"]
-  }
 
+type MainState = {
+  loaded: boolean,
+  landmarks: Landmark[][],
+  transportations: Transportation[][]
+}
+
+class Main extends React.Component<{}, MainState> {
+  nDays = 2
+
+  async getLandmarksOf(day: number) { 
+    const response = await fetch('http://localhost:8080/landmark?day='+day)
+    const json: any[] = await response.json()
+    const landmarks: Landmark[] = json.map(e => {
+      let ret: Landmark = {id: e['id'], name: e['name'], detail: e['detail']}
+      return ret
+    })
+    return landmarks
+  }
+  async getTransportationsOf(day: number) { 
+    const response = await fetch('http://localhost:8080/transportation?day='+day)
+    const json: any[] = await response.json()
+    const transportations: Transportation[] = json.map(e => {
+      let ret: Transportation = {name: e['name']}
+      return ret
+    })
+    return transportations
+  }
+  
+  constructor(props: {}) {
+    super(props)
+    this.state = {
+      loaded: false,
+      landmarks: [],
+      transportations: [],
+    }
+  }
+  componentDidMount() {
+    let landmarksPromise: Promise<Landmark[]>[] = []
+    let transportationsPromise: Promise<Transportation[]>[] = []
+    for (let i = 0; i < this.nDays; i++) {
+      landmarksPromise.push(this.getLandmarksOf(i))
+      transportationsPromise.push(this.getTransportationsOf(i))
+    }
+    Promise.all(landmarksPromise).then(
+      (landmarks) => 
+      Promise.all(transportationsPromise).then(
+        (transportations) =>
+        this.setState({
+          loaded: true,
+          landmarks: landmarks,
+          transportations: transportations,
+        })
+      )
+    )
+  }
   render() {
-    const nDays = 2
     let cards: JSX.Element[] = []
-    for (let i = 1;i <= nDays;i++){
-      let landmarks = this.getLandmarksOf(i)
-      let transportations: String[] = this.getTransportationsOf(i)
+    if (!this.state.loaded) {
+      return (
+        <div className="loading">Loading...</div>
+      );
+    }
+
+    for (let i = 0;i < this.nDays;i++){
+      let landmarks: Landmark[] = this.state.landmarks[i]
+      let transportations: Transportation[] = this.state.transportations[i]
       let card = (
         <ItineraryOfDay 
-            day={i} 
+            day={i+1} 
             landmarks={landmarks}
             transportations={transportations}/>
       )
