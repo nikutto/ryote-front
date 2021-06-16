@@ -51,13 +51,15 @@ const ItineraryOfDay: React.FC <ItineraryOfDayProps> = props => {
     let transportations = props.transportations
     
     let cards = []
-    let n = landmarks.length
-    for (var i = 0;i+1 < n; i++) {
-      cards.push(<LandmarkCard landmark={landmarks[i]}/>)
-      cards.push(<TransportationCard name={transportations[i].name}/>)
+    if (landmarks.length > 0) {
+      let n = landmarks.length
+      for (var i = 0;i+1 < n; i++) {
+        cards.push(<LandmarkCard landmark={landmarks[i]}/>)
+        cards.push(<TransportationCard name={transportations[i].name}/>)
+      }
+      cards.push(<LandmarkCard landmark={landmarks[n-1]}/>)
     }
-    cards.push(<LandmarkCard landmark={landmarks[n-1]}/>)
-
+    
     return (
       <div className={"itinerary_for_day_"+props.day}>
         <h2>
@@ -89,7 +91,7 @@ type MainState = {
 }
 
 class Main extends React.Component<{}, MainState> {
-  nDays = 2
+  nDays = 3
 
   async getLandmarksOf(day: number) { 
     const response = await fetch('http://localhost:8080/landmark?day='+day)
