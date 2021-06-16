@@ -22,6 +22,8 @@ const ItineraryOfDay: React.FC<ItineraryOfDayProps> = props => {
             cards.push(<TransportationCard name={transportations[i].name} />)
         }
         cards.push(<LandmarkCard landmark={landmarks[n - 1]} />)
+    } else {
+        cards.push(<div className="Not loaded"> No schedule. </div>)
     }
 
     return (
