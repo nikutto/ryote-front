@@ -2,7 +2,7 @@ import React from 'react'
 import Loading from './Loading'
 import Landmark from './Landmark'
 import Transportation from './Transportation'
-import ItineraryOfDay from './ItineraryOfDay'
+import Itinerary from './Itinerary'
 import ServerUtil from './ServerUtil'
 
 type LoadStatus = "LOADING" | "COMPLETE" | "ERROR_DB_STATUS" | "ERROR_SERVER_CONNECTION"
@@ -69,24 +69,7 @@ class Main extends React.Component<{}, MainState> {
             <div className="loading">Loading...</div>
         )
     }
-    renderComplete(): JSX.Element {
-        let cards: JSX.Element[] = Array
-            .from(Array(this.nDays).keys())
-            .map(i => (
-                    <ItineraryOfDay
-                        day={i + 1}
-                        landmarks={this.state.landmarks[i]}
-                        transportations={this.state.transportations[i]} />
-                )
-            )
-        return (
-            <div className="main">
-                <main>
-                    {cards}
-                </main>
-            </div>
-        );
-    }
+
     renderError(error: String) {
         return (
             <div className="error">
@@ -98,8 +81,11 @@ class Main extends React.Component<{}, MainState> {
     render() {
         console.log("render()" + this.state)        
         switch (this.state.loadStatus) {
+            case "COMPLETE": return (<Itinerary 
+                                        nDays={this.nDays}
+                                        landmarks={this.state.landmarks}
+                                        transportations={this.state.transportations}/>)
             case "LOADING": return (<Loading/>)
-            case "COMPLETE": return this.renderComplete()
             default: return this.renderError(this.state.loadStatus)
         }
     }
