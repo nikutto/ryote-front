@@ -5,26 +5,30 @@ import ItineraryOfDay from './ItineraryOfDay'
 import ServerUtil from './ServerUtil'
 
 type LoadStatus = "LOADING" | "COMPLETE" | "ERROR_DB_STATUS" | "ERROR_SERVER_CONNECTION"
-
 type MainState = {
     loadStatus: LoadStatus,
     landmarks: Landmark[][],
     transportations: Transportation[][]
 }
 
+function emptyIteneraryState(loadStatus: LoadStatus) {
+    return {
+        loadStatus: loadStatus,
+        landmarks: [],
+        transportations: [],
+    }
+}
+
 class Main extends React.Component<{}, MainState> {
     nDays = 3
 
+    
     constructor(props: {}) {
         super(props)
-        this.state = {
-            loadStatus: "LOADING",
-            landmarks: [],
-            transportations: [],
-        }
+        this.state = emptyIteneraryState("LOADING")
     }
 
-    isValid(landmarks: Landmark[][], transportations: Transportation[][]): boolean {
+    isValidItinerary(landmarks: Landmark[][], transportations: Transportation[][]): boolean {
         for (let i = 0; i < this.nDays; i++) {
             if (Math.max(landmarks[i].length - 1, 0) !== transportations[i].length) {
                 return false
@@ -33,24 +37,17 @@ class Main extends React.Component<{}, MainState> {
         return true
     }
 
-    setConnectionErrorStatus() {
-        this.setState({
-            loadStatus: "ERROR_SERVER_CONNECTION",
-            landmarks: [],
-            transportations: [],
-        })
-    }
     componentDidMount() {
-        let landmarksPromise: Promise<Landmark[]>[] = []
-        let transportationsPromise: Promise<Transportation[]>[] = []
-        for (let i = 0; i < this.nDays; i++) {
-            landmarksPromise.push(ServerUtil.getLandmarksOf(i))
-            transportationsPromise.push(ServerUtil.getTransportationsOf(i))
-        }
+        let landmarksPromise = Array
+            .from(Array(this.nDays).keys())
+            .map(i => ServerUtil.getLandmarksOf(i))
+        let transportationsPromise = Array
+            .from(Array(this.nDays).keys())
+            .map(i => ServerUtil.getTransportationsOf(i))        
 
         Promise.all([Promise.all(landmarksPromise), Promise.all(transportationsPromise)]).then(
             ([landmarks, transportations]) => {
-                if (this.isValid(landmarks, transportations)) {
+                if (this.isValidItinerary(landmarks, transportations)) {
                     this.setState({
                         loadStatus: "COMPLETE",
                         landmarks: landmarks,
@@ -58,16 +55,12 @@ class Main extends React.Component<{}, MainState> {
                     })
                 }
                 else {
-                    this.setState({
-                        loadStatus: "ERROR_DB_STATUS",
-                        landmarks: [],
-                        transportations: []
-                    })
+                    this.setState(emptyIteneraryState("ERROR_DB_STATUS"))
                 }
             }
 
         ).catch(
-            (error) => this.setConnectionErrorStatus()
+            (error) => this.setState(emptyIteneraryState("ERROR_SERVER_CONNECTION"))
         )
     }
     renderLoading() {
@@ -76,20 +69,15 @@ class Main extends React.Component<{}, MainState> {
         )
     }
     renderComplete(): JSX.Element {
-        let cards: JSX.Element[] = []
-        for (let i = 0; i < this.nDays; i++) {
-            let landmarks: Landmark[] = this.state.landmarks[i]
-            let transportations: Transportation[] = this.state.transportations[i]
-
-            let card = (
-                <ItineraryOfDay
-                    day={i + 1}
-                    landmarks={landmarks}
-                    transportations={transportations} />
+        let cards: JSX.Element[] = Array
+            .from(Array(this.nDays).keys())
+            .map(i => (
+                    <ItineraryOfDay
+                        day={i + 1}
+                        landmarks={this.state.landmarks[i]}
+                        transportations={this.state.transportations[i]} />
+                )
             )
-            cards.push(card)
-        }
-
         return (
             <div className="main">
                 <main>
@@ -107,6 +95,7 @@ class Main extends React.Component<{}, MainState> {
         )
     }
     render() {
+        console.log("render()" + this.state)        
         switch (this.state.loadStatus) {
             case "LOADING": return this.renderLoading()
             case "COMPLETE": return this.renderComplete()
