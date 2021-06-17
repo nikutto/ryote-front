@@ -1,4 +1,5 @@
 import React from 'react'
+import Loading from './Loading'
 import Landmark from './Landmark'
 import Transportation from './Transportation'
 import ItineraryOfDay from './ItineraryOfDay'
@@ -97,7 +98,7 @@ class Main extends React.Component<{}, MainState> {
     render() {
         console.log("render()" + this.state)        
         switch (this.state.loadStatus) {
-            case "LOADING": return this.renderLoading()
+            case "LOADING": return (<Loading/>)
             case "COMPLETE": return this.renderComplete()
             default: return this.renderError(this.state.loadStatus)
         }
