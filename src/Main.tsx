@@ -4,6 +4,7 @@ import Landmark from './Landmark'
 import Transportation from './Transportation'
 import Itinerary from './Itinerary'
 import ServerUtil from './ServerUtil'
+import Error from './Error'
 
 type LoadStatus = "LOADING" | "COMPLETE" | "ERROR_DB_STATUS" | "ERROR_SERVER_CONNECTION"
 type MainState = {
@@ -70,14 +71,6 @@ class Main extends React.Component<{}, MainState> {
         )
     }
 
-    renderError(error: String) {
-        return (
-            <div className="error">
-                An error has been detected. <br />
-                Error Type := {error}
-            </div>
-        )
-    }
     render() {
         console.log("render()" + this.state)        
         switch (this.state.loadStatus) {
@@ -86,7 +79,7 @@ class Main extends React.Component<{}, MainState> {
                                         landmarks={this.state.landmarks}
                                         transportations={this.state.transportations}/>)
             case "LOADING": return (<Loading/>)
-            default: return this.renderError(this.state.loadStatus)
+            default: return (<Error msg={this.state.loadStatus as string}/>)
         }
     }
 }
