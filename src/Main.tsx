@@ -24,7 +24,6 @@ function emptyIteneraryState(loadStatus: LoadStatus) {
 class Main extends React.Component<{}, MainState> {
     nDays = 3
 
-    
     constructor(props: {}) {
         super(props)
         this.state = emptyIteneraryState("LOADING")
@@ -39,6 +38,18 @@ class Main extends React.Component<{}, MainState> {
         return true
     }
 
+    setStateWithItinerary([landmarks, transportations]: [Landmark[][], Transportation[][]]) {
+        if (this.isValidItinerary(landmarks, transportations)) {
+            this.setState({
+                loadStatus: "COMPLETE",
+                landmarks: landmarks,
+                transportations: transportations,
+            })
+        }
+        else {
+            this.setState(emptyIteneraryState("ERROR_DB_STATUS"))
+        }
+    }
     componentDidMount() {
         let landmarksPromise = Array
             .from(Array(this.nDays).keys())
@@ -47,20 +58,8 @@ class Main extends React.Component<{}, MainState> {
             .from(Array(this.nDays).keys())
             .map(i => ServerUtil.getTransportationsOf(i))        
 
-        Promise.all([Promise.all(landmarksPromise), Promise.all(transportationsPromise)]).then(
-            ([landmarks, transportations]) => {
-                if (this.isValidItinerary(landmarks, transportations)) {
-                    this.setState({
-                        loadStatus: "COMPLETE",
-                        landmarks: landmarks,
-                        transportations: transportations,
-                    })
-                }
-                else {
-                    this.setState(emptyIteneraryState("ERROR_DB_STATUS"))
-                }
-            }
-
+        Promise.all([Promise.all(landmarksPromise), Promise.all(transportationsPromise)]).then( 
+            (args) => this.setStateWithItinerary(args)
         ).catch(
             (error) => this.setState(emptyIteneraryState("ERROR_SERVER_CONNECTION"))
         )
@@ -72,7 +71,6 @@ class Main extends React.Component<{}, MainState> {
     }
 
     render() {
-        console.log("render()" + this.state)        
         switch (this.state.loadStatus) {
             case "COMPLETE": return (<Itinerary 
                                         nDays={this.nDays}
