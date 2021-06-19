@@ -45,7 +45,7 @@ class Main extends React.Component<{}, MainState> {
         )
     }
 
-    render() {
+    renderBody() {
         switch (this.state.loadStatus) {
             case "COMPLETE": return (<Itinerary 
                                         nDays={this.nDays}
@@ -53,6 +53,14 @@ class Main extends React.Component<{}, MainState> {
             case "LOADING": return (<Loading/>)
             default: return (<Error msg={this.state.loadStatus as string}/>)
         }
+    }
+    render() {
+        let body = this.renderBody()
+        return (
+            <div className="main" style={{margin: "20px"}}>
+                {body}
+            </div>
+        )
     }
 }
 
