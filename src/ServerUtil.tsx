@@ -1,5 +1,6 @@
 import Landmark from './Landmark'
 import Transportation from './Transportation'
+import Site from './Site'
 
 module ServerUtil {
 
@@ -25,6 +26,12 @@ module ServerUtil {
             return ret
         })
         return transportations
+    }
+
+    export async function getSitesOf(day: number) {
+        const response = await fetchServer('/site?day=' + day)
+        const sites: Site[] = await response.json()
+        return sites
     }
 }
 
