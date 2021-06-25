@@ -15,7 +15,7 @@ class Main extends React.Component<{}, MainState> {
     nDays = 3
 
     constructor(props: {}) {
-        super(props)
+        super(props)        
         this.state = {
             loadStatus: "LOADING",
             sites: []   
@@ -23,21 +23,23 @@ class Main extends React.Component<{}, MainState> {
     }
 
     componentDidMount() {
-        let sitesPromise = Array
-            .from(Array(this.nDays).keys())
-            .map(i => ServerUtil.getSitesOf(i))
+        ServerUtil.loginApi().then( () => {
+            let sitesPromise = Array
+                .from(Array(this.nDays).keys())
+                .map(i => ServerUtil.getSitesOf(i))
 
-        Promise.all(sitesPromise).then(
-            (sites) => this.setState({
-                loadStatus: "COMPLETE",
-                sites: sites
-            })
-        ).catch(
-            (error) => this.setState({
-                loadStatus: "ERROR_SERVER_CONNECTION",
-                sites: []
-            })
-        )
+            Promise.all(sitesPromise).then(
+                (sites) => this.setState({
+                    loadStatus: "COMPLETE",
+                    sites: sites
+                })
+            ).catch(
+                (error) => this.setState({
+                    loadStatus: "ERROR_SERVER_CONNECTION",
+                    sites: []
+                })
+            )
+        })
     }
     renderLoading() {
         return (
